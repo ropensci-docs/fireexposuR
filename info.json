@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "70bd025589203434c922b469011b1f475611b2c3",
+    "author": "Air Forbes <heyairf@gmail.com>",
+    "time": "2025-11-03T20:53:39Z",
+    "files": 1,
+    "merge": false,
+    "message": "Update CITATION"
+  },
+  "repo": "https://github.com/ropensci/fireexposuR",
+  "pkg": "fireexposuR",
+  "time": "2026-08-30T08:08:05Z"
+}

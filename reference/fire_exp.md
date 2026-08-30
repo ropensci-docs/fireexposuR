@@ -1,0 +1,239 @@
+# Compute the wildfire exposure metric
+
+`fire_exp()` returns a SpatRaster of wildfire exposure values calculated
+using the input hazard fuel raster for a specified transmission
+distance.
+
+## Usage
+
+``` r
+fire_exp(hazard, t_dist = 500, no_burn, tdist)
+```
+
+## Arguments
+
+- hazard:
+
+  a SpatRaster that represents hazardous fuels for the transmission
+  distance specified in tdist
+
+- t_dist:
+
+  Numeric. Provide a value in meters for the transmission distance. The
+  default is `500` for long-range embers/landscape fire exposure. Use
+  `100` for short-range embers, `30` for radiant heat, or provide a
+  custom distance. See details for the reasoning behind the recommended
+  transmission distances and precautions about using a custom one.
+
+- no_burn:
+
+  (optional) a SpatRaster that represents the non-burnable landscape.
+  Any cells that cannot receive wildfire (e.g. open water, rock) and any
+  cells that are not natural (e.g. built environment, irrigated
+  agricultural areas) should be of value 1, all other cells should be
+  NODATA. This parameter should be provided if preparing data for
+  [`fire_exp_validate()`](https://docs.ropensci.org/fireexposuR/reference/fire_exp_validate.md)
+
+- tdist:
+
+  Deprecated. Use `t_dist`. This parameter will be removed in future
+  versions of the package. Choose from: `"l"` for long-range embers (500
+  m), `"s"` for short-range embers (100 m), `"r"` for radiant heat (30
+  m)
+
+## Value
+
+A SpatRaster object of exposure values between 0-1
+
+## Details
+
+This function is the primary function in this package, the output from
+this function serves as the first input to all other functions in this
+package.
+
+### Background
+
+Wildfire exposure was first proposed for community scale assessments by
+Beverly et al. (2010). Wildfire entry points to the built environment
+were identified by evaluating the surrounding wildland fuels as
+potential ignition sources. These methods were adapted and validated by
+Beverly et al. (2021) for landscape scale assessments. Visual aids to
+better understand these concepts are available in the Wildfire Exposure
+Assessment Guidebook (FireSmart Canada 2018) which includes intuitive
+illustrations.
+
+Three transmission distances were defined in Beverly et al. (2010) for
+different scales of wildfire ignition processes. Different fuel types
+are capable of transmitting fire at different scales. The transmission
+distances define a potential maximum spread distance from an ignition
+source. If the default distances do not accurately represent fire
+behaviour in your area of interest you can adjust them with the `t_dist`
+parameter.
+
+#### Radiant heat (30 m)
+
+The default transmission distance for radiant heat is 30 meters. At this
+scale of wildfire transmission wildfire can spread from direct flame
+contact or thermal radiation warming of fuels.
+
+#### Ember spotting
+
+Embers (AKA firebrands) can be carried by wind beyond the active fire
+front. To determin two different ember spreading distances Beverly et
+al. (2010) reviewed fire-spot distance observations and applied
+predictive models to verify these distances were a reasonable
+assumption.
+
+##### Short-range embers (100 m)
+
+The default transmission distance for short-range embers is 100 meters.
+Some fuel types have the potential to produce embers over short
+distances. An example fuel type that has the potential to transmit
+short-range embers is a deciduous forest. Fuels considered hazardous to
+short-range ember ignition will also be hazardous to transmit fire via
+radiant heat or direct flame contact.
+
+##### Long-range embers (500 m)
+
+The default transmission distance for long-range embers is 500 meters.
+Some fuel types have the potential to transmit embers across large
+distances. This landscape scale process is often a contributor to large,
+fast-moving fires. Any fuels that are considered hazardous for
+long-range ember spotting could also transmit fire by short-range ember
+spotting and radiant heat. An example fuel type that has the potential
+to transmit long-range embers is a mature pine stand.
+
+Although it is possible for embers from certain fuel types to be carried
+much farther than the defined 500 meter transmission distance under
+extreme conditions, these cases are relatively uncommon.
+
+The 500 meter spread distance has been further validated across Alberta
+(Beverly et al. 2021), in Alaska (Schmidt et al. 2024), across the
+entire Canadian landbase (manuscript in preparation), and in Portugal
+(Khan et al. 2025).
+
+#### Setting a custom transmission distance
+
+If the transmission distances from the wildfire exposure literature are
+not representative of the wildland fuels in your area of interest, this
+function can be used to change the transmission distance to a custom
+distance. It is highly recommended that any exposure layers produced
+with this function are validated with observed fire history using the
+[`fire_exp_validate()`](https://docs.ropensci.org/fireexposuR/reference/fire_exp_validate.md)
+function. See methods of validation in Beverly et al. 2021, Schmidt et
+al. 2024, and Khan et al. 2025 for more discussion on validation.
+
+### Technical
+
+#### How the metric is calculated
+
+The wildfire exposure metric is calculated for each cell individually
+using a focal window of the surrounding cells within the specified
+transmission distance. The proportion of cells within the assessment
+window that are classed as hazardous is returned. The wildfire exposure
+metric has a range of 0-1. A wildfire exposure value of 0.5 can be
+interpreted as 50% of cells within the specified transmission distance
+area have the potential to spread fire to the assessment cell. A value
+of 0.5 can also be interpreted in the other direction, a fire in the
+assessment cell could potentially spread to 50% of the surrounding cells
+within the specified transmission distance.
+
+#### Input features
+
+An input hazard raster must be prepared by the user in accordance with
+the intended use. First, refer to the Get Started vignette by running
+[`vignette("fireexposuR")`](https://docs.ropensci.org/fireexposuR/articles/fireexposuR.md)
+to determine what the data requirements are for the intended
+application. Then refer to the Preparing Input Data vignette by running
+[`vignette("prep-input-data")`](https://docs.ropensci.org/fireexposuR/articles/prep-input-data.md)
+for lots of recommendations, advice, and examples.
+
+A separate hazard raster should be prepared for each of the transmission
+distances of interest. There are also minimum spatial resolution and
+extent requirements for each transmission distances.For a specified
+transmission distance, the spatial resolution must be at least 3 times
+finer. For example, for a transmission distance of 300 meters the input
+data should have a resolution of 100 meters or finer.
+
+Long-range embers:
+
+- minimum raster resolution is ~ 150 meters
+
+- The dimensions of the data must be wider/taller than 1000 meters
+  because 500 meters of data will be lost along the perimeter due to
+  edge effects
+
+Short-range embers:
+
+- minimum raster resolution is 33 meters
+
+- The dimensions of the data must be wider/taller than 200 meters
+  because 100 meters of data will be lost along the perimeter due to
+  edge effects
+
+Radiant heat:
+
+- minimum raster resolution is 10 meters
+
+- The dimensions of the data must be wider/taller than 60 meters because
+  30 meters of data will be lost along the perimeter due to edge effects
+
+#### Spatial Reference
+
+The exposure raster will be returned in the same CRS as the input hazard
+layer. A crs must be defined if the output will be used as an input to
+other functions in this package.
+
+## References
+
+Beverly JL, McLoughlin N, Chapman E (2021) A simple metric of landscape
+fire exposure. *Landscape Ecology* **36**, 785-801.
+[doi:10.1007/s10980-020-01173-8](https://doi.org/10.1007/s10980-020-01173-8)
+
+Beverly JL, Bothwell P, Conner JCR, Herd EPK (2010) Assessing the
+exposure of the built environment to potential ignition sources
+generated from vegetative fuel. *International Journal of Wildland Fire*
+**19**, 299-313. [doi:10.1071/WF09071](https://doi.org/10.1071/WF09071)
+
+FireSmart Canada (2018) Wildfire exposure assessment guidebook.
+Available
+[here](https://firesmartcanada.ca/wp-content/uploads/2022/01/FS_ExposureAssessment_Sept2018-1.pdf)
+
+Hijmans R (2024). *terra: Spatial Data Analysis*. R package version
+1.7-78, [CRAN](https://CRAN.R-project.org/package=terra).
+
+Khan SI, Colaço MC, Sequeira AC, Rego FC, Beverly JL (2025) Validating a
+landscape metric to map fire exposure to hazardous fuels in Portugal.
+*Natural Hazards* **121**, 16273–16295.
+[doi:10.1007/s11069-025-07424-8](https://doi.org/10.1007/s11069-025-07424-8)
+
+Schmidt JI, Ziel RH, Calef MP, Varvak A (2024) Spatial distribution of
+wildfire threat in the far north: exposure assessment in boreal
+communities. *Natural Hazards* **120**, 4901-4924.
+[doi:10.1007/s11069-023-06365-4](https://doi.org/10.1007/s11069-023-06365-4)
+
+## Examples
+
+``` r
+# read example hazard data
+hazard_file_path <- "extdata/hazard.tif"
+hazard <- terra::rast(system.file(hazard_file_path, package = "fireexposuR"))
+
+# compute long range exposure
+fire_exp(hazard, tdist = "long")
+#> Warning: use of the 'tdist' parameter has been deprecated.
+#>             Use 't_dist' (with an underscore) with a numeric value instead
+#> Warning: RGL: unable to open X11 display
+#> Warning: 'rgl.init' failed, will use the null device.
+#> See '?rgl.useNULL' for ways to avoid this warning.
+#> class       : SpatRaster
+#> size        : 333, 325, 1  (nrow, ncol, nlyr)
+#> resolution  : 100, 100  (x, y)
+#> extent      : 327800, 360300, 5859100, 5892400  (xmin, xmax, ymin, ymax)
+#> coord. ref. : NAD_1983_Transverse_Mercator
+#> source(s)   : memory
+#> varname     : hazard
+#> name        : exposure
+#> min value   :        0
+#> max value   :        1
+```
