@@ -1,0 +1,13 @@
+{
+  "commit": {
+    "commit": "74a7bdf33e2e1843687c449d860e9666af9045fc",
+    "author": "Air Forbes <heyairf@gmail.com>",
+    "time": "2026-10-27T21:33:53Z",
+    "files": 1,
+    "merge": false,
+    "message": "Update README.Rmd\n\naddition of limitation of liability"
+  },
+  "repo": "https://github.com/ropensci/fireexposuR",
+  "pkg": "fireexposuR",
+  "time": "2026-10-28T00:01:27Z"
+}
